@@ -9,10 +9,23 @@ require([
     var apiUrl = "https://www.themealdb.com/api/json/v1/1/categories.php";
     var searchUrl = "https://www.themealdb.com/api/json/v1/1/search.php?s=";
 
+    // Root div
+    var rootEl = dom.byId("root");
+
+    // Set loading effect
+    const loadingElement = document.createElement("div");
+    loadingElement.classList.add("d-flex", "justify-content-center", "align-items-center");
+    loadingElement.style.height = "40vh";
+    loadingElement.innerHTML = `
+        <div class="spinner-grow text-dark" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        `;
+
     // Breadcrumbs
-    var mealsHomeLink = document.getElementById('meals-home');
-    var mealsByCategoryLink = document.getElementById('meals-by-category');
-    var mealDetailsLink = document.getElementById('meal-details');
+    var mealsHomeLink = dom.byId('meals-home');
+    var mealsByCategoryLink = dom.byId('meals-by-category');
+    var mealDetailsLink = dom.byId('meal-details');
 
     // Home page
     mealsHomeLink.addEventListener('click', function () {
@@ -35,6 +48,12 @@ require([
     function showMealDetails(mealId) {
         var url = `https://www.themealdb.com/api/json/v1/1/lookup.php?i=${mealId}`;
 
+        // Clear previous meals
+        rootEl.innerHTML = "";
+
+        // Show loading effect        
+        rootEl.appendChild(loadingElement);
+
         // Fetch meal details by the selected meal ID
         fetch(url)
             .then(function (response) {
@@ -43,8 +62,6 @@ require([
             .then(function (data) {
                 var meal = data.meals[0];
 
-                // Clear previous meals
-                dom.byId("root").innerHTML = "";
 
                 // Create elements for meal details
                 var mealName = meal.strMeal;
@@ -115,17 +132,22 @@ require([
                 mealDetailsContainer.appendChild(mealDetailsCard);
 
                 // Append container to the root element
-                dom.byId("root").appendChild(mealDetailsContainer);
+                rootEl.appendChild(mealDetailsContainer);
             })
             .catch(function (error) {
                 console.log(error);
+            })
+            .finally(function () {
+                rootEl.removeChild(loadingElement);
             });
     }
 
     // Function to handle category click event
     function handleCategoryClick(category) {
         // Clear previous meals
-        dom.byId("root").innerHTML = "";
+        rootEl.innerHTML = "";
+        // Show loading effect        
+        rootEl.appendChild(loadingElement);
         // Store category name to localStorage;
         localStorage.setItem("category", category);
 
@@ -144,7 +166,7 @@ require([
                 if (meals == null) {
                     var messageElement = document.createElement("h6");
                     messageElement.textContent = `No meals found for ${category}!`;
-                    dom.byId("root").appendChild(messageElement);
+                    rootEl.appendChild(messageElement);
                 }
 
                 meals.forEach(function (meal) {
@@ -172,11 +194,14 @@ require([
                         showMealDetails(mealId);
                     });
 
-                    dom.byId("root").appendChild(mealElement);
+                    rootEl.appendChild(mealElement);
                 });
             })
             .catch(function (error) {
                 console.log(error);
+            })
+            .finally(function () {
+                rootEl.removeChild(loadingElement);
             });
         return handleCategoryClick;
     }
@@ -184,7 +209,10 @@ require([
     // Make a request to fetch categories
     function fetchCategories(apiUrl) {
         // Clear previous meals
-        dom.byId("root").innerHTML = "";
+        rootEl.innerHTML = "";
+        // Show loading effect        
+        rootEl.appendChild(loadingElement);
+
         // Clear localStorage
         localStorage.setItem("category", "");
         // Fetch and return
@@ -218,12 +246,14 @@ require([
                     categoryElement.addEventListener("click", function () {
                         handleCategoryClick(categoryName);
                     });
-
-                    dom.byId("root").appendChild(categoryElement);
+                    rootEl.appendChild(categoryElement);
                 });
             })
             .catch(function (error) {
                 console.log(error);
+            })
+            .finally(function () {
+                rootEl.removeChild(loadingElement);
             });
         return fetchResult;
     }
